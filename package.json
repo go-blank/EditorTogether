@@ -1,0 +1,29 @@
+{
+  "name": "editortogether",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "dev:serve": "node serve.js"
+  },
+  "dependencies": {
+    "@element-plus/icons-vue": "^2.3.2",
+    "@tiptap/extension-collaboration": "^2.26.2",
+    "@tiptap/extension-collaboration-cursor": "^2.26.2",
+    "@tiptap/starter-kit": "^2.26.2",
+    "@tiptap/vue-3": "^2.26.2",
+    "element-plus": "^2.13.7",
+    "vue": "^3.5.32",
+    "vue-router": "^5.0.6",
+    "ws": "^8.20.0",
+    "y-websocket": "^3.0.0",
+    "yjs": "^13.6.30"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.5",
+    "vite": "^8.0.4"
+  }
+}
