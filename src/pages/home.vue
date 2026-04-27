@@ -4,7 +4,7 @@
     <div class="topbar">
       <div class="topbar-title">多人在线协作编辑平台</div>
       <div class="topbar-right">
-        <span class="topbar-user">{{ user?.name || '未登录' }}</span>
+        <span class="topbar-user">{{ user?.username || '未登录' }}</span>
         <el-button size="small" type="info" plain @click="logout">退出</el-button>
       </div>
     </div>
@@ -18,14 +18,14 @@
             </template>
             <div class="popover">
               <div class="popover-title">用户信息</div>
-              <div class="popover-line"><span class="k">姓名</span><span class="v">{{ user?.name }}</span></div>
+              <div class="popover-line"><span class="k">姓名</span><span class="v">{{ user?.username }}</span></div>
               <div class="popover-line"><span class="k">角色</span><span class="v">{{ user?.role }}</span></div>
-              <div class="popover-line"><span class="k">部门</span><span class="v">{{ user?.dept }}</span></div>
+              <div class="popover-line"><span class="k">部门</span><span class="v">{{ user?.department }}</span></div>
               <div class="popover-line"><span class="k">电话</span><span class="v">{{ user?.phone }}</span></div>
               <div class="popover-line"><span class="k">邮箱</span><span class="v">{{ user?.email }}</span></div>
             </div>
           </el-popover>
-          <div class="profile-name">{{ user?.name }}</div>
+          <div class="profile-name">{{ user?.username }}</div>
         </div>
 
         <el-menu class="menu" :default-active="active" @select="onMenuSelect">
@@ -75,19 +75,20 @@ const active = ref('editor') // editor | ai
 
 const user = computed(() => {
   try {
-    return JSON.parse(localStorage.getItem('et_user') || 'null')
+    return JSON.parse(localStorage.getItem('user')) || 'null'
   } catch {
     return null
   }
 })
 
 function logout() {
-  localStorage.removeItem('et_user')
+  localStorage.removeItem('token')
+  localStorage.removeItem('user')
   router.replace('/login')
 }
 
 const userForEditor = computed(() => ({
-  name: user.value?.name || '访客',
+  name: user.value?.username || '访客',
   color: user.value?.color || '#4f46e5',
 }))
 

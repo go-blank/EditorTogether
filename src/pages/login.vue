@@ -10,39 +10,23 @@
         <el-segmented v-model="mode" :options="modeOptions" size="default" />
       </div>
 
-      <el-form class="form" :model="form" label-position="top" @submit.prevent>
+      <el-form class="form" :model="form" label-position="top" @submit.prevent="() => false">
         <el-form-item label="用户名" :error="usernameError">
           <el-input v-model="form.username" autocomplete="username" placeholder="请输入用户名" />
         </el-form-item>
 
         <el-form-item label="密码" :error="passwordError">
-          <el-input
-            v-model="form.password"
-            type="password"
-            show-password
-            autocomplete="current-password"
-            placeholder="请输入密码（至少6位）"
-          />
+          <el-input v-model="form.password" type="password" show-password autocomplete="current-password"
+            placeholder="请输入密码（至少6位）" />
         </el-form-item>
 
-        <el-alert
-          v-if="errorText"
-          class="alert"
-          :title="errorText"
-          type="error"
-          show-icon
-          :closable="false"
-        />
+        <el-alert v-if="errorText" class="alert" :title="errorText" type="error" show-icon :closable="false" />
 
-        <el-button class="primary" type="primary" size="large" :loading="submitting" :disabled="!canSubmit" @click="onSubmit">
+        <el-button class="primary" type="primary" button-type="button" size="large" :loading="submitting"
+          :disabled="!canSubmit" @click.prevent="onSubmit">
           <span v-if="mode === 'login'">登录</span>
           <span v-else>注册并进入</span>
         </el-button>
-
-        <div class="hint">
-          <span class="hint-key">提示：</span>
-          当前为演示流程，后续接入真实登录接口即可。
-        </div>
       </el-form>
     </el-card>
 
@@ -55,6 +39,8 @@
 <script setup>
 import { computed, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { Login, Register } from '../api/user'
+import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 
@@ -74,22 +60,6 @@ const submitting = ref(false)
 const usernameError = computed(() => (form.username.trim().length === 0 ? '' : form.username.trim().length >= 2 ? '' : '至少2位'))
 const passwordError = computed(() => (form.password.length === 0 ? '' : form.password.length >= 6 ? '' : '至少6位'))
 
-function fakeAuth(kind) {
-  // 先把样式/流程跑通：后续替换成真实接口
-  const user = {
-    id: 'u_001',
-    name: form.username.trim(),
-    role: '普通用户',
-    dept: '研发中心',
-    phone: '138-0000-0000',
-    email: `${form.username.trim()}@example.com`,
-    avatarUrl: '/avatar.svg',
-    color: '#4F46E5',
-    kind,
-  }
-  localStorage.setItem('et_user', JSON.stringify(user))
-  return user
-}
 
 async function onSubmit() {
   errorText.value = ''
@@ -100,9 +70,25 @@ async function onSubmit() {
 
   submitting.value = true
   try {
-    await new Promise((r) => setTimeout(r, 450))
-    fakeAuth(mode.value)
-    router.replace('/app')
+    let res
+    if (mode.value === 'login') {
+      res = await Login({ username: form.username, password: form.password })
+      if(res.code === 200 && res.user){
+        localStorage.setItem('user', JSON.stringify(res.user))
+      }
+    }
+
+    else {
+      res = await Register({ username: form.username, password: form.password })
+    }
+
+    if (res.code === 200 && res.token) {
+      localStorage.setItem('token', res.token)
+      router.replace('/app')
+    }
+    else {
+      ElMessage.error(res.error)
+    }
   } catch (e) {
     errorText.value = '操作失败，请稍后重试'
   } finally {
@@ -125,7 +111,7 @@ async function onSubmit() {
 .login-card {
   width: 440px;
   max-width: calc(100% - 32px);
-  margin: 8vh auto 0;
+  margin: 10vh auto 7vh;
   border-radius: 12px;
 }
 
@@ -134,12 +120,14 @@ async function onSubmit() {
   border-bottom: 1px solid rgba(15, 23, 42, 0.08);
   background: linear-gradient(180deg, rgba(79, 70, 229, 0.06), rgba(79, 70, 229, 0.00));
 }
+
 .brand-title {
   font-size: 18px;
   font-weight: 650;
   color: #0f172a;
   letter-spacing: 0.5px;
 }
+
 .brand-sub {
   margin-top: 6px;
   font-size: 12px;
@@ -167,6 +155,7 @@ async function onSubmit() {
   font-size: 12px;
   color: rgba(15, 23, 42, 0.55);
 }
+
 .hint-key {
   color: rgba(15, 23, 42, 0.72);
   font-weight: 600;
@@ -179,4 +168,3 @@ async function onSubmit() {
   color: rgba(15, 23, 42, 0.55);
 }
 </style>
-

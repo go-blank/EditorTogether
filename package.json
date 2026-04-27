@@ -15,6 +15,7 @@
     "@tiptap/extension-collaboration-cursor": "^2.26.2",
     "@tiptap/starter-kit": "^2.26.2",
     "@tiptap/vue-3": "^2.26.2",
+    "axios": "^1.15.2",
     "element-plus": "^2.13.7",
     "vue": "^3.5.32",
     "vue-router": "^5.0.6",

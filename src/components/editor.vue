@@ -1,14 +1,14 @@
 <template>
   <div v-if="editor" class="editor-shell">
-    <div class="editor-container">
-      <editor-content :editor="editor" />
+    <div class="editor-container" @mousedown.prevent="focusEditor" @click="focusEditor">
+      <EditorContent :editor="editor" />
     </div>
   </div>
   <div v-else class="loading">加载编辑器中...</div>
 </template>
 
 <script setup>
-import { onBeforeUnmount } from 'vue'
+import { onBeforeUnmount, onMounted, watch } from 'vue'
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Collaboration from '@tiptap/extension-collaboration'
@@ -56,7 +56,36 @@ const editor = useEditor({
   content: `
     <p>欢迎加入协作！当前用户：${props.user.name}</p>
   `,
+  editorProps: {
+    attributes: {
+      spellcheck: 'false',
+      autocomplete: 'off',
+      autocorrect: 'off',
+      autocapitalize: 'off',
+    },
+  },
 })
+
+function focusEditor() {
+  // 点击容器时把焦点放到 ProseMirror 上，避免“点了没反应”
+  editor.value?.commands?.focus?.('end')
+}
+
+async function focusSoon() {
+  // 首次进入页面时自动聚焦（如果用户此时正在输入别处，浏览器可能会阻止）
+  queueMicrotask(() => focusEditor())
+}
+
+onMounted(() => {
+  focusSoon()
+})
+
+watch(
+  () => editor.value,
+  (v) => {
+    if (v) focusSoon()
+  },
+)
 
 // 组件销毁时，断开WebSocket连接，清理资源
 onBeforeUnmount(() => {
