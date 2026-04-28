@@ -1,4 +1,3 @@
-
 <template>
   <div class="shell">
     <div class="topbar">
@@ -30,11 +29,15 @@
 
         <el-menu class="menu" :default-active="active" @select="onMenuSelect">
           <el-menu-item index="ai">
-            <el-icon><ChatDotRound /></el-icon>
+            <el-icon>
+              <ChatDotRound />
+            </el-icon>
             <span>AI 助手</span>
           </el-menu-item>
           <el-menu-item index="editor">
-            <el-icon><EditPen /></el-icon>
+            <el-icon>
+              <EditPen />
+            </el-icon>
             <span>多人编辑器</span>
           </el-menu-item>
         </el-menu>
@@ -45,11 +48,12 @@
           <template #header>
             <div class="pane-head">
               <div class="pane-title">多人编辑器</div>
-              <div class="pane-sub">（Tiptap 占位：后续再细化工具栏、权限、文档列表等）</div>
+              <!-- <div class="pane-sub">（Tiptap 占位：后续再细化工具栏、权限、文档列表等）</div> -->
             </div>
           </template>
           <div class="pane-body">
-            <Editor doc-id="default-doc" :user="userForEditor" />
+            <CollaborativeEditor :document-id="'69ef669eff44fa4db378a19b'" :token="authToken" :username="user.username"
+              :user-color="user.color || white" />
           </div>
         </el-card>
 
@@ -64,14 +68,15 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import CollaborativeEditor from '../components/CollaborativeEditor.vue'
 import { ChatDotRound, EditPen } from '@element-plus/icons-vue'
-
-import Editor from '../components/editor.vue'
 import AiChat from '../components/AiChat.vue'
 
 const router = useRouter()
 
 const active = ref('editor') // editor | ai
+
+const authToken = localStorage.getItem('token')
 
 const user = computed(() => {
   try {
@@ -113,20 +118,24 @@ function onMenuSelect(key) {
   color: rgba(255, 255, 255, 0.92);
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.25);
 }
+
 .topbar-title {
   font-size: 14px;
   font-weight: 750;
   letter-spacing: 0.6px;
 }
+
 .topbar-right {
   display: flex;
   align-items: center;
   gap: 10px;
 }
+
 .topbar-user {
   font-size: 12px;
   opacity: 0.85;
 }
+
 .topbar-btn {
   height: 26px;
   padding: 0 10px;
@@ -136,6 +145,7 @@ function onMenuSelect(key) {
   color: rgba(255, 255, 255, 0.92);
   cursor: pointer;
 }
+
 .topbar-btn:hover {
   background: rgba(255, 255, 255, 0.10);
 }
@@ -156,6 +166,7 @@ function onMenuSelect(key) {
   padding: 14px 14px 12px;
   border-bottom: 1px solid rgba(15, 23, 42, 0.10);
 }
+
 .avatar {
   width: 56px;
   height: 56px;
@@ -172,6 +183,7 @@ function onMenuSelect(key) {
   margin-bottom: 8px;
   color: #0f172a;
 }
+
 .popover-line {
   display: grid;
   grid-template-columns: 56px 1fr;
@@ -179,9 +191,11 @@ function onMenuSelect(key) {
   padding: 5px 0;
   font-size: 12px;
 }
+
 .k {
   color: rgba(15, 23, 42, 0.56);
 }
+
 .v {
   color: #0f172a;
   font-weight: 600;
@@ -206,6 +220,7 @@ function onMenuSelect(key) {
   border-right: 0;
   background: transparent;
 }
+
 .menu :deep(.el-menu-item) {
   height: 40px;
   line-height: 40px;
@@ -217,26 +232,32 @@ function onMenuSelect(key) {
   transition: background-color 0.12s ease, color 0.12s ease, border-color 0.12s ease;
   position: relative;
 }
+
 .menu :deep(.el-menu-item .el-icon) {
   color: rgba(15, 23, 42, 0.55);
   transition: color 0.12s ease;
 }
+
 .menu :deep(.el-menu-item:hover) {
   background: rgba(79, 70, 229, 0.09);
   border-color: rgba(79, 70, 229, 0.18);
   color: #4338ca;
 }
+
 .menu :deep(.el-menu-item:hover .el-icon) {
   color: #4338ca;
 }
+
 .menu :deep(.el-menu-item.is-active) {
   background: rgba(79, 70, 229, 0.14);
   border-color: rgba(79, 70, 229, 0.30);
   color: #3730a3;
 }
+
 .menu :deep(.el-menu-item.is-active .el-icon) {
   color: #3730a3;
 }
+
 .menu :deep(.el-menu-item.is-active::before) {
   content: '';
   position: absolute;
@@ -252,25 +273,32 @@ function onMenuSelect(key) {
   background: #f1f5f9;
   padding: 12px 12px;
 }
+
 .pane {
   height: 100%;
   border-radius: 12px;
   overflow: hidden;
 }
-.pane-head { display: grid; gap: 4px; }
+
+.pane-head {
+  display: grid;
+  gap: 4px;
+}
+
 .pane-title {
   font-size: 14px;
   font-weight: 800;
   color: #0f172a;
 }
+
 .pane-sub {
   font-size: 12px;
   color: rgba(15, 23, 42, 0.55);
 }
+
 .pane-body {
   height: calc(100% - 0px);
   padding: 12px;
   background: #f8fafc;
 }
 </style>
-
