@@ -28,13 +28,13 @@
         </div>
 
         <el-menu class="menu" :default-active="active" @select="onMenuSelect">
-          <el-menu-item index="ai">
+          <el-menu-item index="aiChat">
             <el-icon>
               <ChatDotRound />
             </el-icon>
             <span>AI 助手</span>
           </el-menu-item>
-          <el-menu-item index="editor">
+          <el-menu-item index="documentManage">
             <el-icon>
               <EditPen />
             </el-icon>
@@ -42,23 +42,10 @@
           </el-menu-item>
         </el-menu>
       </el-aside>
-
       <el-main class="content">
-        <el-card v-if="active === 'editor'" class="pane" shadow="never">
-          <template #header>
-            <div class="pane-head">
-              <div class="pane-title">多人编辑器</div>
-              <!-- <div class="pane-sub">（Tiptap 占位：后续再细化工具栏、权限、文档列表等）</div> -->
-            </div>
-          </template>
-          <div class="pane-body">
-            <CollaborativeEditor :document-id="'69ef669eff44fa4db378a19b'" :token="authToken" :username="user.username"
-              :user-color="user.color || white" />
-          </div>
-        </el-card>
-
-        <el-card v-else class="pane" shadow="never" body-style="padding: 0;">
-          <AiChat :user="user" />
+        <el-card class="pane" shadow="never">
+          <CollaborativeEditor v-if="ifShowEditor" @handleBack="ifShowEditor = false" :documentId="'69f1c870fc96871be8803250'" :token="authToken"/>
+          <component v-else @ToEditor="toEditor" :is="currentComponent" :key="currentComponent" />
         </el-card>
       </el-main>
     </el-container>
@@ -66,15 +53,24 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import CollaborativeEditor from '../components/CollaborativeEditor.vue'
 import { ChatDotRound, EditPen } from '@element-plus/icons-vue'
+import DocumentManage from '../components/documentManage.vue'
 import AiChat from '../components/AiChat.vue'
+
+const componentMap = {
+  documentManage: DocumentManage,
+  aiChat: AiChat
+};
+
+const active = ref('aiChat')
+
+const currentComponent = computed(() => componentMap[active.value]);
 
 const router = useRouter()
 
-const active = ref('editor') // editor | ai
 
 const authToken = localStorage.getItem('token')
 
@@ -85,6 +81,15 @@ const user = computed(() => {
     return null
   }
 })
+
+const ifShowEditor = ref(false)
+const documentId = ref()
+
+const toEditor = (data) => {
+  ifShowEditor.value = true
+  documentId.value = '69ef669eff44fa4db378a19b'
+}
+
 
 function logout() {
   localStorage.removeItem('token')
@@ -276,29 +281,8 @@ function onMenuSelect(key) {
 
 .pane {
   height: 100%;
+  width: 100%;
   border-radius: 12px;
   overflow: hidden;
-}
-
-.pane-head {
-  display: grid;
-  gap: 4px;
-}
-
-.pane-title {
-  font-size: 14px;
-  font-weight: 800;
-  color: #0f172a;
-}
-
-.pane-sub {
-  font-size: 12px;
-  color: rgba(15, 23, 42, 0.55);
-}
-
-.pane-body {
-  height: calc(100% - 0px);
-  padding: 12px;
-  background: #f8fafc;
 }
 </style>

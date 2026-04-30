@@ -22,16 +22,28 @@ export function useCollaborativeEditor(options: UseCollaborativeEditorOptions) {
     userColor = `#${Math.floor(Math.random() * 16777215).toString(16)}`,
     initialContent = '<p>开始协作编辑...</p>'
   } = options;
+  console.log("传进来的数据是",documentId)
 
   const isConnected = ref(false);
   const isSynced = ref(false);
   const error = ref<string | null>(null);
-  
+
   let provider: HocuspocusProvider | null = null;
   let yDoc: Y.Doc | null = null;
 
   // 创建 Yjs 文档和 Provider
   const initCollaboration = () => {
+
+    // 清理旧实例
+    if (provider) {
+      provider.destroy();
+      provider = null;
+    }
+    if (yDoc) {
+      yDoc.destroy();
+      yDoc = null;
+    }
+
     if (!documentId || !token) {
       error.value = '缺少文档ID或token';
       return null;
@@ -39,38 +51,49 @@ export function useCollaborativeEditor(options: UseCollaborativeEditorOptions) {
 
     // 创建 Yjs 文档
     yDoc = new Y.Doc();
-    console.log("传递的参数分别是","documentId",documentId,"token",token)
+    console.log("传递的参数分别是", "documentId", documentId, "token", token)
 
-    
+
     // 创建 Hocuspocus Provider
     provider = new HocuspocusProvider({
       url: `ws://localhost:3001/${documentId}?token=${token}`,  // 你的 WebSocket 地址
       name: documentId,
       token: token,
       document: yDoc,
-      
+
+      onAuthenticated() {
+        console.log('✅ 认证成功！');
+      },
+
       onConnect: () => {
         console.log('✅ 已连接到协作服务器');
-        console.log("传递的参数分别是","documentId",documentId,"token",token)
-        debugger
+        console.log("传递的参数分别是", "documentId", documentId, "token", token)
         isConnected.value = true;
         error.value = null;
+        console.log("状态变化是否连接成功", isConnected.value)
       },
-      
+
       onDisconnect: () => {
         console.log('❌ 连接已断开');
         isConnected.value = false;
         isSynced.value = false;
       },
-      
+
       onSynced: () => {
         console.log('✅ 文档已同步');
         isSynced.value = true;
+        console.log("状态变化是否同步成功", isSynced.value)
       },
     });
-    
+
     return yDoc;
   };
+
+  // 初始化协同
+  const res = initCollaboration()
+  if(!res){
+    return {error}
+  }
 
   // 创建 Tiptap 编辑器
   const editor = useEditor({
@@ -97,19 +120,19 @@ export function useCollaborativeEditor(options: UseCollaborativeEditorOptions) {
     },
   });
 
-  // 初始化协同
-  initCollaboration();
-
-  // 清理
   onUnmounted(() => {
-    if (provider) {
-      provider.destroy();
-    }
-    if (yDoc) {
-      yDoc.destroy();
-    }
     if (editor.value) {
       editor.value.destroy();
+    }
+
+    if (provider) {
+      provider.destroy();
+      provider = null;
+    }
+
+    if (yDoc) {
+      yDoc.destroy();
+      yDoc = null;
     }
   });
 

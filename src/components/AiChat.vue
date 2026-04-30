@@ -1,3 +1,40 @@
+<template>
+  <div class="chat">
+    <div class="chat-head">
+      <div class="title">AI 助手</div>
+      <div class="meta">对话模型：DeepSeek（可选）</div>
+    </div>
+
+    <div ref="listEl" class="chat-list" aria-label="对话消息列表">
+      <div
+        v-for="m in state.messages"
+        :key="m.id"
+        class="row"
+        :class="{ me: m.role === 'user', bot: m.role === 'assistant' }"
+      >
+        <el-card class="bubble" shadow="never" :body-style="{ padding: '10px 12px' }">
+          <div class="bubble-role">{{ m.role === 'user' ? props.user?.name || '我' : 'AI' }}</div>
+          <div class="bubble-content">{{ m.content }}</div>
+        </el-card>
+      </div>
+    </div>
+
+    <div class="chat-input">
+      <el-input
+        v-model="input"
+        class="textarea"
+        type="textarea"
+        :autosize="{ minRows: 1, maxRows: 4 }"
+        :disabled="sending"
+        placeholder="输入消息，Enter 发送，Shift+Enter 换行"
+        @keydown.enter.prevent.exact="onSend"
+        @keydown.enter.exact.shift.stop
+      />
+      <el-button class="send" type="primary" :loading="sending" :disabled="!input.trim()" @click="onSend">发送</el-button>
+    </div>
+  </div>
+</template>
+
 <script setup>
 import { nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { chatWithDeepSeek } from '../services/deepseek'
@@ -62,43 +99,6 @@ async function onSend() {
   }
 }
 </script>
-
-<template>
-  <div class="chat">
-    <div class="chat-head">
-      <div class="title">AI 助手</div>
-      <div class="meta">对话模型：DeepSeek（可选）</div>
-    </div>
-
-    <div ref="listEl" class="chat-list" aria-label="对话消息列表">
-      <div
-        v-for="m in state.messages"
-        :key="m.id"
-        class="row"
-        :class="{ me: m.role === 'user', bot: m.role === 'assistant' }"
-      >
-        <el-card class="bubble" shadow="never" :body-style="{ padding: '10px 12px' }">
-          <div class="bubble-role">{{ m.role === 'user' ? props.user?.name || '我' : 'AI' }}</div>
-          <div class="bubble-content">{{ m.content }}</div>
-        </el-card>
-      </div>
-    </div>
-
-    <div class="chat-input">
-      <el-input
-        v-model="input"
-        class="textarea"
-        type="textarea"
-        :autosize="{ minRows: 1, maxRows: 4 }"
-        :disabled="sending"
-        placeholder="输入消息，Enter 发送，Shift+Enter 换行"
-        @keydown.enter.prevent.exact="onSend"
-        @keydown.enter.exact.shift.stop
-      />
-      <el-button class="send" type="primary" :loading="sending" :disabled="!input.trim()" @click="onSend">发送</el-button>
-    </div>
-  </div>
-</template>
 
 <style scoped>
 .chat {
