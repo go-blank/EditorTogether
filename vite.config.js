@@ -7,9 +7,9 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:3000', // 你的后端地址
-        changeOrigin: true,             // 开启跨域
-      }
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
     }
   }
 })

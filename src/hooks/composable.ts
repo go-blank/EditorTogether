@@ -5,6 +5,7 @@ import { useEditor } from '@tiptap/vue-3';
 import StarterKit from '@tiptap/starter-kit';
 import Collaboration from '@tiptap/extension-collaboration';
 import CollaborationCursor from '@tiptap/extension-collaboration-cursor';
+import { eventBus } from '../../utils/eventBus.js'
 
 export interface UseCollaborativeEditorOptions {
   documentId: string;
@@ -12,6 +13,16 @@ export interface UseCollaborativeEditorOptions {
   username?: string;
   userColor?: string;
   initialContent?: string;
+}
+
+let timer: NodeJS.Timeout | null = null
+
+function debounceUpdate() {
+  if (timer) clearTimeout(timer)
+  timer = setTimeout(() => {
+    console.log("开始发送事件")
+    eventBus.emit('updateDocumentRecord')
+  }, 5000)
 }
 
 export function useCollaborativeEditor(options: UseCollaborativeEditorOptions) {
@@ -22,7 +33,7 @@ export function useCollaborativeEditor(options: UseCollaborativeEditorOptions) {
     userColor = `#${Math.floor(Math.random() * 16777215).toString(16)}`,
     initialContent = '<p>开始协作编辑...</p>'
   } = options;
-  console.log("传进来的数据是",documentId)
+  console.log("传进来的数据是", documentId)
 
   const isConnected = ref(false);
   const isSynced = ref(false);
@@ -84,6 +95,11 @@ export function useCollaborativeEditor(options: UseCollaborativeEditorOptions) {
         isSynced.value = true;
         console.log("状态变化是否同步成功", isSynced.value)
       },
+      // onAwarenessChange: ({ state }) => {
+      //   console.log("文档状态发生改变")
+      //   debounceUpdate()
+      // }
+
     });
 
     return yDoc;
@@ -91,8 +107,8 @@ export function useCollaborativeEditor(options: UseCollaborativeEditorOptions) {
 
   // 初始化协同
   const res = initCollaboration()
-  if(!res){
-    return {error}
+  if (!res) {
+    return { error }
   }
 
   // 创建 Tiptap 编辑器
@@ -114,10 +130,6 @@ export function useCollaborativeEditor(options: UseCollaborativeEditorOptions) {
         },
       }),
     ],
-    onUpdate: ({ editor }) => {
-      // 可选：监听本地更新
-      console.log('内容已更新');
-    },
   });
 
   onUnmounted(() => {

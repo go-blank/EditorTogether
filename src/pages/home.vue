@@ -28,7 +28,7 @@
         </div>
 
         <el-menu class="menu" :default-active="active" @select="onMenuSelect">
-          <el-menu-item index="aiChat">
+          <!-- <el-menu-item index="aiChat">
             <el-icon>
               <ChatDotRound />
             </el-icon>
@@ -39,12 +39,20 @@
               <EditPen />
             </el-icon>
             <span>多人编辑器</span>
+          </el-menu-item> -->
+
+          <el-menu-item v-for="item in menuList" :index="item.index">
+            <el-icon>
+              <component :is="item.Icon"></component>
+            </el-icon>
+            <span>{{ item.title }}</span>
           </el-menu-item>
         </el-menu>
       </el-aside>
       <el-main class="content">
         <el-card class="pane" shadow="never">
-          <CollaborativeEditor v-if="ifShowEditor" @handleBack="ifShowEditor = false" :documentId="'69f1c870fc96871be8803250'" :token="authToken"/>
+          <CollaborativeEditor v-if="ifShowEditor" @handleBack="ifShowEditor = false" :documentId="documentId"
+            :token="authToken" :username="user?.username" />
           <component v-else @ToEditor="toEditor" :is="currentComponent" :key="currentComponent" />
         </el-card>
       </el-main>
@@ -56,19 +64,18 @@
 import { computed, ref, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import CollaborativeEditor from '../components/CollaborativeEditor.vue'
-import { ChatDotRound, EditPen } from '@element-plus/icons-vue'
 import DocumentManage from '../components/documentManage.vue'
 import AiChat from '../components/AiChat.vue'
+import { menuList } from './constant/index.js'
 
 const componentMap = {
   documentManage: DocumentManage,
-  aiChat: AiChat
+  aiChat: AiChat,
 };
 
 const active = ref('aiChat')
 
 const currentComponent = computed(() => componentMap[active.value]);
-
 const router = useRouter()
 
 
@@ -87,7 +94,7 @@ const documentId = ref()
 
 const toEditor = (data) => {
   ifShowEditor.value = true
-  documentId.value = '69ef669eff44fa4db378a19b'
+  documentId.value = data.id
 }
 
 
