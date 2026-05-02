@@ -6,7 +6,8 @@ export function getList(data) {
         url: 'GETdocumentsList',
         params: {
             currentPage: data.currentPage,
-            pageSize: data.pageSize
+            pageSize: data.pageSize,
+            status:data?.status
         },
         method: 'get'
     })
@@ -29,6 +30,14 @@ export function del(ids) {
     })
 }
 
+//彻底删除
+export function Permanentlydelete(ids){
+    return request({
+        url: `/documents/${ids}/permanent`,
+        method: 'delete'
+    })
+}
+
 //新增文档成员
 export function addMember(ids) {
     return request({
@@ -37,3 +46,12 @@ export function addMember(ids) {
         body:{}
     })
 }
+
+//从回收站恢复文档
+export function restoreDocument(ids){
+    return request({
+        url:`/Restoredocuments/${ids}`,
+        method:'put'
+    })
+}
+

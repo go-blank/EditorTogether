@@ -1,7 +1,9 @@
 <template>
-  <div class="add" style="margin-bottom: 20px;">
+  <div class="add" style="margin-bottom: 20px;display: flex;gap: 20px;">
     <el-button type="primary" @click.prevent="addTableRecords">新增</el-button>
+    <el-button type="primary" @click.prevent="openRecycleBin">回收站</el-button>
   </div>
+
   <div class="table-page">
     <el-table :data="tableData" border stripe style="width: 100%" row-key="id" v-loading="Loading" :header-cell-style="{
       backgroundColor: '#f1f5f9',
@@ -128,7 +130,7 @@ const page = reactive({
 })
 const dialogVisible = ref(false)
 const shareDialogVisible = ref(false)
-const recycleBinDialogVisiable = ref(true)
+const recycleBinDialogVisiable = ref(false)
 
 const shareLink = ref('')
 const options = ['新增', '加入']
@@ -168,6 +170,10 @@ const addTableRecords = () => {
   dialogVisible.value = true
 }
 
+const openRecycleBin = () => {
+  recycleBinDialogVisiable.value = true
+}
+
 const comformBtnClick = async () => {
   if (AddTypeValue.value === '新增') {
     try {
@@ -199,23 +205,25 @@ const handleClose = () => {
     dialogVisible.value = false
 }
 
-const handleDelete = async (row) => {
-  try {
-    await ElMessageBox.confirm(
-      '此操作将永久删除该文档, 是否继续?',
-      '提示',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }
-    )
-    await del(row.id)
-    ElMessage.success('删除成功！')
-    getDocumentList()
-  } catch (error) {
-    ElMessage.info('已取消删除')
-  }
+const handleDelete = (row) => {
+  ElMessageBox.confirm(
+    '此操作将永久删除该文档, 是否继续?',
+    '提示',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    }
+  ).then(async () => {
+    try {
+      await del(row.id)
+      ElMessage.success('删除成功！')
+      getDocumentList()
+    } catch (error) {
+      ElMessage.error(error)
+    }
+  })
+
 }
 const handleShare = (data) => {
   shareLink.value = encrypt({ document_id: data.id, title: data.title })

@@ -1,6 +1,7 @@
 <template>
   <div class="editorWrapStyle">
-    <el-button class="GoBackButtonStyle" type="primary" :icon="ArrowLeftBold" size="small" @click=" emits('handleBack')">
+    <el-button class="GoBackButtonStyle" type="primary" :icon="ArrowLeftBold" size="small"
+      @click=" emits('handleBack')">
       返回文档列表
     </el-button>
     <div class="collaborative-editor">
@@ -75,7 +76,7 @@
 
 <script setup lang="ts">
 import { ArrowLeftBold } from '@element-plus/icons-vue';
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 import { EditorContent } from '@tiptap/vue-3';
 import { useCollaborativeEditor } from '../hooks/composable';
 const emits = defineEmits(['handleBack'])
@@ -87,13 +88,18 @@ const props = defineProps<{
   userColor?: string;
 }>();
 
-
-const { editor, isConnected, isSynced, error } = useCollaborativeEditor({
+const { editor, isConnected, isSynced, error, shouldGoBack } = useCollaborativeEditor({
   documentId: props.documentId,
   token: props.token,
   username: props.username,
   userColor: props.userColor,
 }) || {};
+
+watch(shouldGoBack, (status) => {
+  if (status)
+    emits('handleBack')
+})
+
 
 // 状态栏样式
 const statusClass = computed(() => ({
@@ -124,7 +130,8 @@ const statusText = computed(() => {
   flex-direction: column;
   gap: 10px;
 }
-.GoBackButtonStyle{
+
+.GoBackButtonStyle {
   width: 100px;
   height: 32px;
 }

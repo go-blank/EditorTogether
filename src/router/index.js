@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 import Login from '../pages/login.vue'
 import Home from '../pages/home.vue'
+import { getUserInfo } from '../api/user.js'
 
 function isAuthed() {
   try {
@@ -30,6 +31,12 @@ router.beforeEach((to, from, next) => {
     // 已认证，访问登录页时跳转到 app
     next('/app')
   } else {
+    const userInfo = localStorage.getItem('user')
+    if (!userInfo && to.path !== '/login') {
+      getUserInfo().then(res => {
+        localStorage.setItem('user', JSON.stringify(res?.data))
+      })
+    }
     next()
   }
 })

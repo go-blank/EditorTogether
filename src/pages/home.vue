@@ -28,19 +28,6 @@
         </div>
 
         <el-menu class="menu" :default-active="active" @select="onMenuSelect">
-          <!-- <el-menu-item index="aiChat">
-            <el-icon>
-              <ChatDotRound />
-            </el-icon>
-            <span>AI 助手</span>
-          </el-menu-item>
-          <el-menu-item index="documentManage">
-            <el-icon>
-              <EditPen />
-            </el-icon>
-            <span>多人编辑器</span>
-          </el-menu-item> -->
-
           <el-menu-item v-for="item in menuList" :index="item.index">
             <el-icon>
               <component :is="item.Icon"></component>

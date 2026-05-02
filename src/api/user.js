@@ -15,3 +15,11 @@ export function Register(data) {
         method: 'post'
     })
 }
+
+//获取用户信息
+export function getUserInfo() {
+    return request({
+        url: 'auth/getUserInfo',
+        method: 'get'
+    })
+}
