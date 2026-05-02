@@ -6,6 +6,9 @@ import StarterKit from '@tiptap/starter-kit';
 import Collaboration from '@tiptap/extension-collaboration';
 import CollaborationCursor from '@tiptap/extension-collaboration-cursor';
 import { eventBus } from '../../utils/eventBus.js'
+import { ElMessage } from 'element-plus'
+import { useRouter } from 'vue-router'
+const router = useRouter()
 
 export interface UseCollaborativeEditorOptions {
   documentId: string;
@@ -38,6 +41,7 @@ export function useCollaborativeEditor(options: UseCollaborativeEditorOptions) {
   const isConnected = ref(false);
   const isSynced = ref(false);
   const error = ref<string | null>(null);
+  const shouldGoBack = ref(false)
 
   let provider: HocuspocusProvider | null = null;
   let yDoc: Y.Doc | null = null;
@@ -74,6 +78,11 @@ export function useCollaborativeEditor(options: UseCollaborativeEditorOptions) {
 
       onAuthenticated() {
         console.log('✅ 认证成功！');
+      },
+
+      onAuthenticationFailed: (data) => {
+        ElMessage.error('文档已被删除');
+        shouldGoBack.value = true
       },
 
       onConnect: () => {
@@ -153,5 +162,6 @@ export function useCollaborativeEditor(options: UseCollaborativeEditorOptions) {
     isConnected,
     isSynced,
     error,
+    shouldGoBack
   };
 }
