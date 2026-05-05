@@ -21,6 +21,7 @@ const router = createRouter({
   ],
 })
 
+const whiteList = ['/login']
 
 router.beforeEach((to, from, next) => {
   // debugger
@@ -32,12 +33,15 @@ router.beforeEach((to, from, next) => {
     next('/app')
   } else {
     const userInfo = localStorage.getItem('user')
-    if (!userInfo && to.path !== '/login') {
+    if (!userInfo && !whiteList.includes(to.path)) {
       getUserInfo().then(res => {
         localStorage.setItem('user', JSON.stringify(res?.data))
+        next()
       })
     }
-    next()
+    else {
+      next()
+    }
   }
 })
 

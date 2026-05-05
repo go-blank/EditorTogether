@@ -57,7 +57,7 @@ request.interceptors.response.use(
 
                     break;
                 case 500:
-                    ElMessage.error('服务器错误')
+                    ElMessage.error(data.error)
                     break;
                 default:
                     ElMessage.error('未知错误',data.error || data.message)
