@@ -105,7 +105,7 @@ watch(
 
 onMounted(() => {
   scrollToBottom()
-  console.log("解密之后的用户内容是：", state.messages[18].content)
+  console.log("解密之后的用户内容是：", state?.messages[18]?.content)
 })
 
 async function onSend() {

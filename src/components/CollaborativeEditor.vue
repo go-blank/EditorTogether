@@ -12,8 +12,14 @@
         <span v-if="error" class="error-text">{{ error }}</span>
       </div>
 
+      <!-- 只读提示栏 -->
+      <div v-if="props.canWrite === false" class="readonly-bar">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+        <span>只能阅读不可编辑</span>
+      </div>
+
       <!-- 工具栏 -->
-      <div class="toolbar" v-if="editor">
+      <div class="toolbar" :class="{ readonly: props.canWrite === false }" v-if="editor">
         <button @click="editor.chain().focus().toggleBold().run()" :class="{ active: editor.isActive('bold') }"
           title="加粗">
           <strong>B</strong>
@@ -67,7 +73,7 @@
       </div>
 
       <!-- 编辑器内容区域 -->
-      <div class="editor-container">
+      <div class="editor-container" :class="{ readonly: props.canWrite === false }">
         <editor-content :editor="editor" />
       </div>
     </div>
@@ -86,6 +92,7 @@ const props = defineProps<{
   token: string;
   username?: string;
   userColor?: string;
+  canWrite?: boolean;
 }>();
 
 const { editor, isConnected, isSynced, error, shouldGoBack } = useCollaborativeEditor({
@@ -93,6 +100,7 @@ const { editor, isConnected, isSynced, error, shouldGoBack } = useCollaborativeE
   token: props.token,
   username: props.username,
   userColor: props.userColor,
+  editable: props.canWrite,
 }) || {};
 
 watch(shouldGoBack, (status) => {
@@ -118,6 +126,7 @@ const statusText = computed(() => {
   if (error?.value) return '连接错误';
   if (!isConnected?.value) return '连接中...';
   if (!isSynced?.value) return '同步中...';
+  if (props.canWrite === false) return '已连接 · 只读模式';
   return '已连接 · 协作文档';
 });
 </script>
@@ -134,6 +143,17 @@ const statusText = computed(() => {
 .GoBackButtonStyle {
   width: 100px;
   height: 32px;
+}
+
+.readonly-bar {
+  padding: 8px 16px;
+  background-color: #fff3e0;
+  border-bottom: 1px solid #ffe0b2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #e65100;
 }
 
 .collaborative-editor {
@@ -231,6 +251,16 @@ const statusText = computed(() => {
 .toolbar button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.toolbar.readonly button {
+  cursor: not-allowed;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.editor-container.readonly :deep(.ProseMirror) {
+  cursor: default;
 }
 
 .separator {

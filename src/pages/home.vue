@@ -39,7 +39,7 @@
       <el-main class="content">
         <el-card class="pane" shadow="never">
           <CollaborativeEditor v-if="ifShowEditor" @handleBack="ifShowEditor = false" :documentId="documentId"
-            :token="authToken" :username="user?.username" />
+            :token="authToken" :username="user?.username" :can-write="canWrite" />
           <component v-else @ToEditor="toEditor" :is="currentComponent" :key="currentComponent" />
         </el-card>
       </el-main>
@@ -50,14 +50,18 @@
 <script setup>
 import { computed, ref, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import CollaborativeEditor from '../components/CollaborativeEditor.vue'
 import DocumentManage from '../components/documentManage.vue'
+import MemberManagement from '../components/MemberRoleManage.vue'
 import AiChat from '../components/AiChat.vue'
+import { getDocumentPermission } from '../api/document.js'
 import { menuList } from './constant/index.js'
 
 const componentMap = {
   documentManage: DocumentManage,
   aiChat: AiChat,
+  memberManagement:MemberManagement
 };
 
 const active = ref('aiChat')
@@ -78,8 +82,17 @@ const user = computed(() => {
 
 const ifShowEditor = ref(false)
 const documentId = ref()
+const canWrite = ref(true)
 
-const toEditor = (data) => {
+const toEditor = async (data) => {
+  try {
+    const res = await getDocumentPermission(data.id)
+    if (res.code === 200) {
+      canWrite.value = res.data.write
+    }
+  } catch {
+    canWrite.value = false
+  }
   ifShowEditor.value = true
   documentId.value = data.id
 }

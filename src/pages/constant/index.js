@@ -8,4 +8,8 @@ export const menuList = [{
     title: '多人编辑器',
     Icon: EditPen,
     index: 'documentManage'
+},{
+    title: '角色权限控制',
+    Icon: EditPen,
+    index: 'memberManagement'
 }]

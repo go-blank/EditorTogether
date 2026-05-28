@@ -1,4 +1,4 @@
-import { ref, onUnmounted } from 'vue';
+import { ref, watch, onUnmounted } from 'vue';
 import * as Y from 'yjs';
 import { HocuspocusProvider } from '@hocuspocus/provider';
 import { useEditor } from '@tiptap/vue-3';
@@ -16,6 +16,7 @@ export interface UseCollaborativeEditorOptions {
   username?: string;
   userColor?: string;
   initialContent?: string;
+  editable?: boolean;
 }
 
 let timer: NodeJS.Timeout | null = null
@@ -34,7 +35,8 @@ export function useCollaborativeEditor(options: UseCollaborativeEditorOptions) {
     token,
     username = '匿名用户',
     userColor = `#${Math.floor(Math.random() * 16777215).toString(16)}`,
-    initialContent = '<p>开始协作编辑...</p>'
+    initialContent = '<p>开始协作编辑...</p>',
+    editable = true
   } = options;
   console.log("传进来的数据是", documentId)
 
@@ -140,6 +142,13 @@ export function useCollaborativeEditor(options: UseCollaborativeEditorOptions) {
       }),
     ],
   });
+
+  // 根据权限控制编辑器可编辑状态
+  watch(editor, (editorInstance) => {
+    if (editorInstance) {
+      editorInstance.setEditable(editable);
+    }
+  }, { immediate: true });
 
   onUnmounted(() => {
     if (editor.value) {

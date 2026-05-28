@@ -50,8 +50,40 @@ export function addMember(ids) {
 //从回收站恢复文档
 export function restoreDocument(ids){
     return request({
-        url:`/Restoredocuments/${ids}`,
+        url:`/Restoredocusments/${ids}`,
         method:'put'
     })
 }
 
+//根据当前文档id获取成员列表
+export function getMemberListByDocumentId(ids){
+    return request({
+        url:`/GETdocumentsMemberList/${ids}/members`,
+        method:'get'
+    })
+}
+
+//获取当前用户创建的文档列表
+export function getDocumentListCreatedByCurrentUser(){
+    return request({
+        url:`/GETdocumentsListCreator`,
+        method:'get'
+    })
+}
+
+//修改文档权限
+export function updateManageRule(data){
+    return request({
+        url:`/updateManageRule`,
+        method:'post',
+        data
+    })
+}
+
+// 获取当前用户对文档的操作权限
+export function getDocumentPermission(id){
+    return request({
+        url:`/GetDocumentMemberPermission/${id}`,
+        method:'get'
+    })
+}
