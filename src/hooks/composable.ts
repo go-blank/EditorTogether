@@ -82,9 +82,17 @@ export function useCollaborativeEditor(options: UseCollaborativeEditorOptions) {
         console.log('✅ 认证成功！');
       },
 
-      onAuthenticationFailed: (data) => {
-        ElMessage.error('文档已被删除');
-        shouldGoBack.value = true
+      onClose: ({ event }) => {
+        console.log('WebSocket 关闭, code:', event.code);
+        // 服务端主动关闭连接，通常是权限问题或文档不存在
+        // 注意：需要区分是正常关闭还是错误关闭
+        if (event.code === 1000) {
+          // 1000 是正常关闭，不需要处理
+          return;
+        }
+        // 其他关闭码可能是服务端 reject 导致的
+        ElMessage.error('文档连接失败，文档可能已被删除');
+        shouldGoBack.value = true;
       },
 
       onConnect: () => {

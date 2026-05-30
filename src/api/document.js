@@ -50,7 +50,7 @@ export function addMember(ids) {
 //从回收站恢复文档
 export function restoreDocument(ids){
     return request({
-        url:`/Restoredocusments/${ids}`,
+        url:`/Restoredocuments/${ids}`,
         method:'put'
     })
 }

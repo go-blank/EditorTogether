@@ -17,8 +17,7 @@
               <span></span>
             </div>
           </div>
-          <!-- <div v-else class="bubble-content" v-html="marked.parse(m.content)"></div> -->
-          <div v-else class="bubble-content">{{ m.content }}</div>
+          <div v-else class="bubble-content" v-html="marked.parse(m.content, { gfm: true })"></div>
         </el-card>
       </div>
     </div>
@@ -184,9 +183,11 @@ async function onSend() {
       }
 
     }
+    console.log("最终存入的内容是",state.messages[lastmsgindex].content)
 
   } catch (e) {
     console.error("=== 跳 catch 的真实原因 ===", e);
+    state.pop()
     state.messages.push({
       id: crypto.randomUUID(),
       role: 'assistant',
@@ -276,11 +277,103 @@ const cancelSend = () => {
 }
 
 .bubble-content {
-  white-space: pre-wrap;
   word-break: break-word;
   font-size: 14px;
   color: #0f172a;
-  line-height: 1.55;
+  line-height: 1.6;
+}
+
+.bubble-content :deep(h1),
+.bubble-content :deep(h2),
+.bubble-content :deep(h3),
+.bubble-content :deep(h4) {
+  margin: 0.6em 0 0.3em;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.bubble-content :deep(h1) { font-size: 1.35em; }
+.bubble-content :deep(h2) { font-size: 1.2em; }
+.bubble-content :deep(h3) { font-size: 1.1em; }
+.bubble-content :deep(h4) { font-size: 1em; }
+
+.bubble-content :deep(p) {
+  margin: 0.4em 0;
+  &:first-child { margin-top: 0; }
+  &:last-child { margin-bottom: 0; }
+}
+
+.bubble-content :deep(pre) {
+  background: #1e293b;
+  color: #e2e8f0;
+  padding: 12px 14px;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 0.5em 0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.bubble-content :deep(code) {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.9em;
+}
+.bubble-content :deep(pre code) {
+  background: none;
+  padding: 0;
+  color: inherit;
+}
+.bubble-content :deep(p code) {
+  background: #f1f5f9;
+  padding: 1px 5px;
+  border-radius: 4px;
+  color: #dc2626;
+}
+
+.bubble-content :deep(ul),
+.bubble-content :deep(ol) {
+  padding-left: 1.5em;
+  margin: 0.4em 0;
+}
+.bubble-content :deep(li) {
+  margin: 0.2em 0;
+}
+
+.bubble-content :deep(blockquote) {
+  border-left: 3px solid #cbd5e1;
+  padding-left: 12px;
+  margin: 0.5em 0;
+  color: #64748b;
+}
+
+.bubble-content :deep(a) {
+  color: #4f46e5;
+  text-decoration: underline;
+}
+
+.bubble-content :deep(table) {
+  border-collapse: collapse;
+  margin: 0.5em 0;
+  font-size: 13px;
+  width: 100%;
+}
+.bubble-content :deep(th),
+.bubble-content :deep(td) {
+  border: 1px solid #e2e8f0;
+  padding: 6px 10px;
+  text-align: left;
+}
+.bubble-content :deep(th) {
+  background: #f8fafc;
+  font-weight: 600;
+}
+
+.bubble-content :deep(hr) {
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  margin: 0.8em 0;
+}
+
+.bubble-content :deep(strong) {
+  font-weight: 700;
 }
 
 .chat-input {

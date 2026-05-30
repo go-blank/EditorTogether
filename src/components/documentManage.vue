@@ -1,5 +1,5 @@
 <template>
-  <div class="add" style="margin-bottom: 20px;display: flex;gap: 20px;">
+  <div class="add" style="display: flex;gap: 20px;padding: 20px;">
     <el-button type="primary" @click.prevent="addTableRecords">新增</el-button>
     <el-button type="primary" @click.prevent="openRecycleBin">回收站</el-button>
   </div>
@@ -58,8 +58,8 @@
   </div>
 
 
-  <!-- 新增弹窗 -->
-  <el-dialog v-model="dialogVisible" width="calc(100vw * 400px / 1396px)" :before-close="handleClose">
+  <!-- 新增弹窗（PC：el-dialog / 手机：MobileDialog） -->
+  <el-dialog v-if="!isMobile" v-model="dialogVisible" width="calc(100vw * 400px / 1396px)" class="responsive-dialog" :before-close="handleClose">
 
     <template #header>
       <el-segmented v-model="AddTypeValue" :options="options" />
@@ -94,8 +94,15 @@
     </template>
   </el-dialog>
 
-  <!-- 分享 弹窗 -->
-  <el-dialog v-model="shareDialogVisible" title="分享链接" width="calc(100vw * 400px / 1396px)"
+  <MobileDialog
+    v-if="isMobile"
+    v-model="dialogVisible"
+    type="add"
+    @confirm="onMobileDialogConfirm"
+  />
+
+  <!-- 分享弹窗（PC：el-dialog / 手机：MobileDialog） -->
+  <el-dialog v-if="!isMobile" v-model="shareDialogVisible" title="分享链接" class="responsive-dialog"
     @close="shareDialogVisible = false">
     <span>{{ shareLink }}</span>
     <template #footer>
@@ -107,6 +114,13 @@
       </div>
     </template>
   </el-dialog>
+
+  <MobileDialog
+    v-if="isMobile"
+    v-model="shareDialogVisible"
+    type="share"
+    :share-link="shareLink"
+  />
 
   <RecycleBinDialog v-model="recycleBinDialogVisiable"></RecycleBinDialog>
 
@@ -120,6 +134,7 @@ import { add, getList, del, addMember } from '../api/document.js'
 import CryptoJS from 'crypto-js'
 import { eventBus } from '../../utils/eventBus.js'
 import RecycleBinDialog from './RecycleBinDialog.vue'
+import MobileDialog from './MobileDialog.vue'
 
 const tableData = ref([])
 const Loading = ref(false)
@@ -131,6 +146,14 @@ const page = reactive({
 const dialogVisible = ref(false)
 const shareDialogVisible = ref(false)
 const recycleBinDialogVisiable = ref(false)
+
+// 移动端检测（与组件内媒体查询一致）
+const isMobile = ref(window.innerWidth <= 768)
+function onResize() {
+  isMobile.value = window.innerWidth <= 768
+}
+window.addEventListener('resize', onResize)
+onBeforeUnmount(() => window.removeEventListener('resize', onResize))
 
 const shareLink = ref('')
 const options = ['新增', '加入']
@@ -247,6 +270,22 @@ const handleCopy = async () => {
 }
 
 
+/** 手机端新增/加入弹窗确认 */
+const onMobileDialogConfirm = async (data) => {
+  try {
+    if (data.addType === '新增') {
+      await add({ workspace_id: data.workspace_id, title: data.title })
+    } else {
+      await addMember(data.document_id)
+    }
+    ElMessage.success(data.addType === '新增' ? '新增成功' : '加入成功')
+    getDocumentList()
+  } catch (error) {
+    // 错误由 request 拦截器统一处理
+    console.error(error)
+  }
+}
+
 const openDocument = (id) => {
   emits('ToEditor', { id })
 }
@@ -279,6 +318,7 @@ onBeforeUnmount(() => {
   width: 100%;
   box-sizing: border-box;
   position: relative;
+  padding: 0 20px;
 }
 
 // 操作按钮样式
@@ -286,15 +326,24 @@ onBeforeUnmount(() => {
   width: 100%;
   display: flex;
   flex-wrap: wrap;
+  gap:10px;
 }
 
 .button {
   flex: 1;
   min-width: 0;
-  font-size: 0.9vw !important;
+  font-size: clamp(12px, 0.9vw, 14px) !important;
+  margin-left: 0 !important;
 }
 
 .goToEditor {
   cursor: pointer;
+}
+</style>
+
+<!-- 非 scoped 样式：穿透 el-dialog teleport -->
+<style>
+.responsive-dialog {
+  --el-dialog-width: 420px;
 }
 </style>

@@ -9,14 +9,14 @@
 
         <el-table v-loading="loading" :data="tableData" border style="width: 100%" :span-method="objectSpanMethod"
             :header-cell-style="{ background: '#f5f7fa', color: '#303133', fontWeight: 700 }" empty-text="暂无已创建的文档或成员">
-            <el-table-column prop="title" label="文档名称" min-width="180" />
-            <el-table-column prop="username" label="用户信息" min-width="150" />
-            <el-table-column label="读权限控制" min-width="120" align="center">
+            <el-table-column prop="title" label="文档名称" width="auto" />
+            <el-table-column prop="username" label="用户信息" width="auto" />
+            <el-table-column label="读权限控制" width="auto" align="center">
                 <template #default="{ row }">
                     <el-switch :model-value="true" disabled />
                 </template>
             </el-table-column>
-            <el-table-column label="写权限控制" min-width="120" align="center">
+            <el-table-column label="写权限控制" width="auto" align="center">
                 <template #default="{ row }">
                     <el-switch v-model="row.writePerm" @change="onPermChange(row, 'write')" />
                 </template>
