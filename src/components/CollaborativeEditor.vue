@@ -64,6 +64,11 @@
           "
         </button>
         <span class="separator"></span>
+        <button class="export-btn" @click="handleExportPdf" title="导出 PDF">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="margin-right:4px;"><path d="M20 2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8.5 7.5c0 .83-.67 1.5-1.5 1.5H9v2H7.5V7H10c.83 0 1.5.67 1.5 1.5v1zm5 2c0 .83-.67 1.5-1.5 1.5h-2.5V7H15c.83 0 1.5.67 1.5 1.5v3zm4-3H19v1h1.5V11H19v2h-1.5V7h3v1.5zM9 9.5h1v-1H9v1zM5 6H3v14c0 1.1.9 2 2 2h14v-2H5V6zm10 5.5h1v-3h-1v3z"/></svg>
+          PDF
+        </button>
+        <span class="separator"></span>
         <button @click="editor.chain().focus().undo().run()" :disabled="!editor.can().undo()">
           ↶ 撤销
         </button>
@@ -85,6 +90,8 @@ import { ArrowLeftBold } from '@element-plus/icons-vue';
 import { computed, watch } from 'vue';
 import { EditorContent } from '@tiptap/vue-3';
 import { useCollaborativeEditor } from '../hooks/composable';
+import { exportPdf } from '../api/export.js';
+import { ElMessage } from 'element-plus';
 const emits = defineEmits(['handleBack'])
 
 const props = defineProps<{
@@ -93,6 +100,7 @@ const props = defineProps<{
   username?: string;
   userColor?: string;
   canWrite?: boolean;
+  documentTitle?: string;
 }>();
 
 const { editor, isConnected, isSynced, error, shouldGoBack } = useCollaborativeEditor({
@@ -129,6 +137,31 @@ const statusText = computed(() => {
   if (props.canWrite === false) return '已连接 · 只读模式';
   return '已连接 · 协作文档';
 });
+
+  /** 导出 PDF */
+  async function handleExportPdf() {
+    if (!editor?.value) {
+      ElMessage.warning("编辑器尚未就绪")
+      return
+    }
+    try {
+      const title = props.documentTitle || "未命名文档"
+      const htmlContent = editor.value.getHTML()
+      ElMessage.info("正在生成 PDF...")
+      const blob = await exportPdf(title, htmlContent)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = title + ".pdf"
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      ElMessage.success("PDF 导出成功")
+    } catch (err) {
+      ElMessage.error(err.message || "导出 PDF 失败")
+    }
+  }
 </script>
 
 <style scoped>
@@ -261,6 +294,18 @@ const statusText = computed(() => {
 
 .editor-container.readonly :deep(.ProseMirror) {
   cursor: default;
+}
+
+.export-btn {
+  display: inline-flex;
+  align-items: center;
+  background: #22c55e !important;
+  border-color: #22c55e !important;
+  color: #fff !important;
+}
+.export-btn:hover {
+  background: #16a34a !important;
+  border-color: #16a34a !important;
 }
 
 .separator {

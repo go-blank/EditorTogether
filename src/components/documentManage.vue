@@ -4,16 +4,36 @@
     <el-button type="primary" @click.prevent="openRecycleBin">回收站</el-button>
   </div>
 
+  <!-- 搜索条件（仅 PC） -->
+  <div class="search-bar" v-if="!isMobile">
+    <div class="search-item">
+      <span class="search-label">文档名称</span>
+      <el-input v-model="filters.title" placeholder="按名称搜索" clearable size="default" style="width:180px" @change="onSearch" />
+    </div>
+    <div class="search-item">
+      <span class="search-label">创始人</span>
+      <el-input v-model="filters.created_by_name" placeholder="按创始人搜索" clearable size="default" style="width:160px" @change="onSearch" />
+    </div>
+    <div class="search-item">
+      <span class="search-label">更新人</span>
+      <el-input v-model="filters.updated_by_name" placeholder="按更新人搜索" clearable size="default" style="width:160px" @change="onSearch" />
+    </div>
+    <el-button size="default" type="primary" @click="resetSearch">重置</el-button>
+    <el-button size="default" type="primary" @click="onSearch">搜索</el-button>
+  </div>
+
   <div class="table-page">
     <el-table :data="tableData" border stripe style="width: 100%" row-key="id" v-loading="Loading" :header-cell-style="{
       backgroundColor: '#f1f5f9',
       color: '#303133',
       fontWeight: 500,
       textAlign: 'center'
-    }">
+    }"
+    height="calc(100% - 40px)"
+    >
       <el-table-column label="文档名称" prop="title" width="auto" align="center">
         <template #default="{ row }">
-          <span class="goToEditor" @click="openDocument(row.id)">
+          <span class="goToEditor" @click="openDocument(row)">
             {{ row.title }}
           </span>
         </template>
@@ -29,15 +49,9 @@
         </template>
       </el-table-column>
 
-      <el-table-column label="操作" fixed="right" width="auto" align="center">
+      <el-table-column label="操作" fixed="right" width="140px" align="center">
         <template #default="scope">
           <div class="table-operate">
-            <el-button type="success" @click="handleExport(scope.row)" class="button"> <el-icon class="el-icon--left">
-                <Download />
-              </el-icon>
-              导出
-            </el-button>
-
             <el-button type="primary" @click="handleShare(scope.row)" class="button">
               <el-icon class="el-icon--left">
                 <Share />
@@ -55,6 +69,21 @@
         </template>
       </el-table-column>
     </el-table>
+
+    <!-- 分页器（仅 PC） -->
+    <div class="pagination-wrap" v-if="!isMobile">
+      <el-pagination
+        v-model:current-page="page.currentPage"
+        v-model:page-size="page.pageSize"
+        :page-sizes="[5, 10, 20, 50]"
+        :total="page.total"
+        layout="sizes, prev, pager, next"
+        background
+        small
+        @current-change="getDocumentList"
+        @size-change="getDocumentList"
+      />
+    </div>
   </div>
 
 
@@ -102,7 +131,7 @@
   />
 
   <!-- 分享弹窗（PC：el-dialog / 手机：MobileDialog） -->
-  <el-dialog v-if="!isMobile" v-model="shareDialogVisible" title="分享链接" class="responsive-dialog"
+  <el-dialog v-if="!isMobile" v-model="shareDialogVisible" width="calc(100vw * 400px / 1396px)" title="分享链接" class="responsive-dialog"
     @close="shareDialogVisible = false">
     <span>{{ shareLink }}</span>
     <template #footer>
@@ -122,12 +151,13 @@
     :share-link="shareLink"
   />
 
-  <RecycleBinDialog v-model="recycleBinDialogVisiable"></RecycleBinDialog>
+  <RecycleBinDialog v-if="!isMobile" v-model="recycleBinDialogVisiable"></RecycleBinDialog>
+  <MobileRecycleBin v-if="isMobile" v-model="recycleBinDialogVisiable"></MobileRecycleBin>
 
 </template>
 
 <script setup>
-import { ref, reactive, onBeforeUnmount } from 'vue'
+import { ref, reactive, onBeforeUnmount, onUnmounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Download, Delete, Share } from '@element-plus/icons-vue'
 import { add, getList, del, addMember } from '../api/document.js'
@@ -135,6 +165,7 @@ import CryptoJS from 'crypto-js'
 import { eventBus } from '../../utils/eventBus.js'
 import RecycleBinDialog from './RecycleBinDialog.vue'
 import MobileDialog from './MobileDialog.vue'
+import MobileRecycleBin from './MobileRecycleBin.vue'
 
 const tableData = ref([])
 const Loading = ref(false)
@@ -142,6 +173,11 @@ const page = reactive({
   pageSize: 10,
   currentPage: 1,
   total: 0
+})
+const filters = reactive({
+  title: '',
+  created_by_name: '',
+  updated_by_name: ''
 })
 const dialogVisible = ref(false)
 const shareDialogVisible = ref(false)
@@ -162,6 +198,17 @@ const form = reactive({
   workspace_id: '测试工作区'
 })
 
+
+const handleDocDeleted = (notif) => {
+    if ( notif.action !== 'Cdelete') {
+      getDocumentList()
+    }
+  }
+eventBus.on('notification:new', handleDocDeleted)
+
+onUnmounted(()=>{
+  eventBus.off('notification:new')
+})
 
 /**
  * AES 加密
@@ -185,8 +232,9 @@ function encrypt(data) {
 
 const emits = defineEmits(['ToEditor'])
 const handleExport = (row) => {
-  console.log('导出数据：', row)
-  ElMessage.success(`成功导出：${row.title}`)
+  // 打开编辑器，用户可在编辑器中点击「导出 PDF」按钮
+  openDocument(row)
+  ElMessage.info('请先在编辑器中查看文档，然后点击工具栏的「导出 PDF」按钮')
 }
 
 const addTableRecords = () => {
@@ -286,14 +334,19 @@ const onMobileDialogConfirm = async (data) => {
   }
 }
 
-const openDocument = (id) => {
-  emits('ToEditor', { id })
+const openDocument = (row) => {
+  emits('ToEditor', { id: row.id, title: row.title })
 }
 
 const getDocumentList = async () => {
   try {
     Loading.value = true
-    const res = await getList(page)
+    const res = await getList({
+      ...page,
+      title: filters.title || undefined,
+      created_by_name: filters.created_by_name || undefined,
+      updated_by_name: filters.updated_by_name || undefined
+    })
     tableData.value = res.data?.documents
     page.total = res.data?.total
     page.currentPage = res.data?.currentPage
@@ -301,6 +354,21 @@ const getDocumentList = async () => {
   } catch (error) {
     ElMessage.error(error)
   }
+}
+
+// 搜索时回到第一页
+const onSearch = () => {
+  page.currentPage = 1
+  getDocumentList()
+}
+
+// 重置搜索条件
+const resetSearch = () => {
+  filters.title = ''
+  filters.created_by_name = ''
+  filters.updated_by_name = ''
+  page.currentPage = 1
+  getDocumentList()
 }
 
 getDocumentList()
@@ -319,6 +387,7 @@ onBeforeUnmount(() => {
   box-sizing: border-box;
   position: relative;
   padding: 0 20px;
+  height: calc(100% - 120px);
 }
 
 // 操作按钮样式
@@ -338,6 +407,35 @@ onBeforeUnmount(() => {
 
 .goToEditor {
   cursor: pointer;
+}
+
+/* ===== 搜索条件栏 ===== */
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 20px 16px;
+  flex-wrap: wrap;
+}
+
+.search-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.search-label {
+  font-size: 13px;
+  color: #475569;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ===== 分页器 ===== */
+.pagination-wrap {
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px 0 0;
 }
 </style>
 

@@ -1,34 +1,44 @@
 <template>
   <!-- ==================== 移动端布局 ==================== -->
   <template v-if="isMobile">
-    <!-- 主菜单页 -->
-    <div v-if="showMenu" class="mobile-shell">
-      <div class="mobile-topbar">多人在线协作编辑平台</div>
-      <div class="mobile-menu">
-        <div
-          v-for="item in menuList"
-          :key="item.index"
-          class="mobile-menu-item"
-          :class="{ active: active === item.index }"
-          @click="onMobileMenuItemClick(item.index)"
-        >
-          <el-icon><component :is="item.Icon" /></el-icon>
-          <span>{{ item.title }}</span>
+    <div class="mobile-shell">
+      <!-- 共享顶栏（小铃铛常驻，不参与 showMenu 切换） -->
+      <div class="mobile-shared-header">
+        <template v-if="showMenu">
+          <span class="shared-header-title">多人在线协作编辑平台</span>
+        </template>
+        <template v-else>
+          <el-button text :icon="ArrowLeft" @click="goBack">返回</el-button>
+          <span class="mobile-content-title">{{ currentMobileTitle }}</span>
+        </template>
+        <div class="mobile-header-right">
+          <span>{{ user?.username }}</span>
+          <NotificationBell />
+          <el-button v-if="!showMenu" size="small" plain @click="logout">退出</el-button>
         </div>
       </div>
-    </div>
-    <!-- 内容页 -->
-    <div v-else class="mobile-shell">
-      <div class="mobile-content-header">
-        <el-button text :icon="ArrowLeft" @click="goBack">返回</el-button>
-        <span class="mobile-content-title">{{ currentMobileTitle }}</span>
-        <el-button size="small" plain @click="logout">退出</el-button>
+      <!-- 主菜单页 -->
+      <div v-if="showMenu" class="mobile-menu-body">
+        <div class="mobile-menu">
+          <div
+            v-for="item in menuList"
+            :key="item.index"
+            class="mobile-menu-item"
+            :class="{ active: active === item.index }"
+            @click="onMobileMenuItemClick(item.index)"
+          >
+            <el-icon><component :is="item.Icon" /></el-icon>
+            <span>{{ item.title }}</span>
+          </div>
+        </div>
       </div>
-      <div class="mobile-content-body">
+      <!-- 内容页 -->
+      <div v-else class="mobile-content-body-outer">
         <CollaborativeEditor
           v-if="ifShowEditor"
           @handleBack="onMobileEditorBack"
           :documentId="documentId"
+          :documentTitle="documentTitle"
           :token="authToken"
           :username="user?.username"
           :can-write="canWrite"
@@ -49,6 +59,7 @@
       <div class="topbar">
         <div class="topbar-title">多人在线协作编辑平台</div>
         <div class="topbar-right">
+          <NotificationBell />
           <span class="topbar-user">{{ user?.username || '未登录' }}</span>
           <el-button size="small" type="info" plain @click="logout">退出</el-button>
         </div>
@@ -88,6 +99,7 @@
               v-if="ifShowEditor"
               @handleBack="ifShowEditor = false"
               :documentId="documentId"
+              :documentTitle="documentTitle"
               :token="authToken"
               :username="user?.username"
               :can-write="canWrite"
@@ -113,6 +125,9 @@ import CollaborativeEditor from '../components/CollaborativeEditor.vue'
 import DocumentManage from '../components/documentManage.vue'
 import MemberManagement from '../components/MemberRoleManage.vue'
 import AiChat from '../components/AiChat.vue'
+import MobileDocumentManage from '../components/MobileDocumentManage.vue'
+import MobileMemberRoleManage from '../components/MobileMemberRoleManage.vue'
+import NotificationBell from '../components/NotificationBell.vue'
 import { getDocumentPermission } from '../api/document.js'
 import { menuList } from './constant/index.js'
 import { useMobileLayout } from '../hooks/useMobileLayout'
@@ -124,7 +139,14 @@ const componentMap = {
 }
 
 const active = ref('aiChat')
-const currentComponent = computed(() => componentMap[active.value])
+const currentComponent = computed(() => {
+  // 移动端使用独立组件
+  if (isMobile.value) {
+    if (active.value === 'documentManage') return MobileDocumentManage
+    if (active.value === 'memberManagement') return MobileMemberRoleManage
+  }
+  return componentMap[active.value]
+})
 const router = useRouter()
 
 const authToken = localStorage.getItem('token')
@@ -143,6 +165,7 @@ const { isMobile, showMenu, goToComponent, goBack } = useMobileLayout()
 // 编辑器状态
 const ifShowEditor = ref(false)
 const documentId = ref()
+const documentTitle = ref('')
 const canWrite = ref(true)
 
 /** 打开文档编辑器 */
@@ -157,6 +180,7 @@ const toEditor = async (data) => {
   }
   ifShowEditor.value = true
   documentId.value = data.id
+  documentTitle.value = data.title || ''
 }
 
 /** 移动端：点击菜单项 */
@@ -363,25 +387,51 @@ function onMenuSelect(key) {
     background: #f1f5f9;
   }
 
-  .mobile-topbar {
+  /* ===== 共享顶栏（菜单页和内容页共用，含小铃铛） ===== */
+  .mobile-shared-header {
     height: 44px;
     display: flex;
     align-items: center;
-    justify-content: center;
+    padding: 0 4px;
+    background: linear-gradient(180deg, #0f172a, #0b1224);
+    color: rgba(255, 255, 255, 0.92);
+    flex-shrink: 0;
+  }
+
+  .shared-header-title {
+    flex: 1;
+    text-align: center;
     font-size: 15px;
     font-weight: 700;
-    background: linear-gradient(180deg, #0f172a, #0b1224);
+  }
+
+  .mobile-content-title {
+    flex: 1;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 600;
     color: rgba(255, 255, 255, 0.92);
   }
 
-  /* 主菜单：竖直卡片 */
-  .mobile-menu {
+  .mobile-header-right {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* ===== 主菜单 ===== */
+  .mobile-menu-body {
     flex: 1;
+    overflow-y: auto;
+  }
+
+  .mobile-menu {
     padding: 50px;
     display: flex;
     gap:30px;
     flex-direction: column;
     width: 100%;
+    height: 100%;
   }
 
   .mobile-menu-item {
@@ -434,26 +484,14 @@ function onMenuSelect(key) {
     color: #3730a3;
   }
 
-  /* 内容页头部（返回按钮 + 标题 + 退出） */
-  .mobile-content-header {
-    height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 4px;
-    background: #fff;
-    border-bottom: 1px solid #e2e8f0;
-  }
-
-  .mobile-content-title {
-    font-size: 15px;
-    font-weight: 600;
-    color: #0f172a;
+  /* ===== 内容页 ===== */
+  .mobile-content-body-outer {
+    flex: 1;
+    overflow: auto;
   }
 
   .mobile-content-body {
     flex: 1;
     overflow: auto;
   }
-}
-</style>
+}</style>

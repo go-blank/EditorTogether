@@ -23,6 +23,10 @@ export default defineConfig({
           })
         }
       },
+      '/ws/notifications': {
+        target: 'ws://localhost:3000',
+        ws: true,
+      },
     }
   }
 })

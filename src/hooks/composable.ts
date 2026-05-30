@@ -6,7 +6,7 @@ import StarterKit from '@tiptap/starter-kit';
 import Collaboration from '@tiptap/extension-collaboration';
 import CollaborationCursor from '@tiptap/extension-collaboration-cursor';
 import { eventBus } from '../../utils/eventBus.js'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { useRouter } from 'vue-router'
 const router = useRouter()
 
@@ -38,7 +38,7 @@ export function useCollaborativeEditor(options: UseCollaborativeEditorOptions) {
     initialContent = '<p>开始协作编辑...</p>',
     editable = true
   } = options;
-  console.log("传进来的数据是", documentId)
+  // console.log("传进来的数据是", documentId)
 
   const isConnected = ref(false);
   const isSynced = ref(false);
@@ -68,7 +68,7 @@ export function useCollaborativeEditor(options: UseCollaborativeEditorOptions) {
 
     // 创建 Yjs 文档
     yDoc = new Y.Doc();
-    console.log("传递的参数分别是", "documentId", documentId, "token", token)
+    // console.log("传递的参数分别是", "documentId", documentId, "token", token)
 
 
     // 创建 Hocuspocus Provider
@@ -77,6 +77,7 @@ export function useCollaborativeEditor(options: UseCollaborativeEditorOptions) {
       name: documentId,
       token: token,
       document: yDoc,
+
 
       onAuthenticated() {
         console.log('✅ 认证成功！');
@@ -96,11 +97,11 @@ export function useCollaborativeEditor(options: UseCollaborativeEditorOptions) {
       },
 
       onConnect: () => {
-        console.log('✅ 已连接到协作服务器');
-        console.log("传递的参数分别是", "documentId", documentId, "token", token)
+        // console.log('✅ 已连接到协作服务器');
+        // console.log("传递的参数分别是", "documentId", documentId, "token", token)
         isConnected.value = true;
         error.value = null;
-        console.log("状态变化是否连接成功", isConnected.value)
+        // console.log("状态变化是否连接成功", isConnected.value)
       },
 
       onDisconnect: () => {
@@ -112,7 +113,7 @@ export function useCollaborativeEditor(options: UseCollaborativeEditorOptions) {
       onSynced: () => {
         console.log('✅ 文档已同步');
         isSynced.value = true;
-        console.log("状态变化是否同步成功", isSynced.value)
+        // console.log("状态变化是否同步成功", isSynced.value)
       },
       // onAwarenessChange: ({ state }) => {
       //   console.log("文档状态发生改变")
@@ -158,6 +159,20 @@ export function useCollaborativeEditor(options: UseCollaborativeEditorOptions) {
     }
   }, { immediate: true });
 
+
+  // 监听文档被删除的通知
+  const handleDocDeleted = (notif) => {
+    if (notif.docId === documentId && (notif.action === 'Rdelete' || notif.action === 'Cdelete')) {
+      ElMessageBox.alert(
+        '该文档已被创建者删除，即将返回文档列表',
+        '文档已被删除',
+        { confirmButtonText: '确定', type: 'warning', callback: () => { shouldGoBack.value = true; } }
+      )
+    }
+  }
+  eventBus.on('notification:new', handleDocDeleted)
+
+
   onUnmounted(() => {
     if (editor.value) {
       editor.value.destroy();
@@ -172,6 +187,9 @@ export function useCollaborativeEditor(options: UseCollaborativeEditorOptions) {
       yDoc.destroy();
       yDoc = null;
     }
+
+    // 清理通知监听
+    eventBus.off('notification:new', handleDocDeleted);
   });
 
   return {

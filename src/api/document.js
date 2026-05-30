@@ -2,13 +2,18 @@ import request from "../../utils/request";
 
 //分页
 export function getList(data) {
+    const params = {
+        currentPage: data.currentPage,
+        pageSize: data.pageSize,
+        status: data?.status
+    }
+    // 搜索条件（非空才传）
+    if (data?.title) params.title = data.title
+    if (data?.created_by_name) params.created_by_name = data.created_by_name
+    if (data?.updated_by_name) params.updated_by_name = data.updated_by_name
     return request({
         url: 'GETdocumentsList',
-        params: {
-            currentPage: data.currentPage,
-            pageSize: data.pageSize,
-            status:data?.status
-        },
+        params,
         method: 'get'
     })
 }

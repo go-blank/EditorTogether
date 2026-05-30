@@ -9,7 +9,7 @@
       <div v-for="m in state.messages" :key="m.id" class="row"
         :class="{ me: m.role === 'user', bot: m.role === 'assistant' }">
         <el-card class="bubble" shadow="never" :body-style="{ padding: '10px 12px' }">
-          <div class="bubble-role">{{ m.role === 'user' ? props.user?.name || '我' : 'AI' }}</div>
+          <div class="bubble-role">{{ m.role === 'user' ? '我' : 'AI' }}</div>
           <div v-if="m.role === 'assistant' && m.isLoading">
             <div class="dot-loading">
               <span></span>
@@ -38,9 +38,6 @@ import { nextTick, onMounted, reactive, ref, watch, computed } from 'vue'
 import CryptoJS from 'crypto-js'
 import { marked } from 'marked'
 
-const props = defineProps({
-  user: { type: Object, required: true },
-})
 const state = reactive({
   messages: getlocalStorageAiRecords() || [
     {
@@ -104,7 +101,7 @@ watch(
 
 onMounted(() => {
   scrollToBottom()
-  console.log("解密之后的用户内容是：", state?.messages[18]?.content)
+  // console.log("解密之后的用户内容是：", state?.messages[18]?.content)
 })
 
 async function onSend() {
@@ -140,7 +137,6 @@ async function onSend() {
         'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify({
-        user: props.user,
         messages: state.messages.map((m) => ({
           role: m.role,
           content: m.content,
@@ -183,7 +179,7 @@ async function onSend() {
       }
 
     }
-    console.log("最终存入的内容是",state.messages[lastmsgindex].content)
+    // console.log("最终存入的内容是",state.messages[lastmsgindex].content)
 
   } catch (e) {
     console.error("=== 跳 catch 的真实原因 ===", e);
