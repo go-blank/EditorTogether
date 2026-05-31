@@ -118,16 +118,24 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, defineAsyncComponent } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowLeft } from '@element-plus/icons-vue'
-import CollaborativeEditor from '../components/CollaborativeEditor.vue'
-import DocumentManage from '../components/documentManage.vue'
-import MemberManagement from '../components/MemberRoleManage.vue'
-import AiChat from '../components/AiChat.vue'
-import MobileDocumentManage from '../components/MobileDocumentManage.vue'
-import MobileMemberRoleManage from '../components/MobileMemberRoleManage.vue'
 import NotificationBell from '../components/NotificationBell.vue'
+
+// 异步加载的重型组件（代码分割）
+const asyncLoading = {
+  component: { template: '<div style="padding:40px;text-align:center;color:#999;">加载中...</div>' },
+  error: { template: '<div style="padding:40px;text-align:center;color:#f56c6c;">组件加载失败</div>' },
+  delay: 200,
+  timeout: 10000,
+}
+const CollaborativeEditor = defineAsyncComponent({ loader: () => import('../components/CollaborativeEditor.vue'), ...asyncLoading })
+const DocumentManage = defineAsyncComponent({ loader: () => import('../components/documentManage.vue'), ...asyncLoading })
+const MemberManagement = defineAsyncComponent({ loader: () => import('../components/MemberRoleManage.vue'), ...asyncLoading })
+const AiChat = defineAsyncComponent({ loader: () => import('../components/AiChat.vue'), ...asyncLoading })
+const MobileDocumentManage = defineAsyncComponent({ loader: () => import('../components/MobileDocumentManage.vue'), ...asyncLoading })
+const MobileMemberRoleManage = defineAsyncComponent({ loader: () => import('../components/MobileMemberRoleManage.vue'), ...asyncLoading })
 import { getDocumentPermission } from '../api/document.js'
 import { menuList } from './constant/index.js'
 import { useMobileLayout } from '../hooks/useMobileLayout'

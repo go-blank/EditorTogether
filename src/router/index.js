@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
-import Login from '../pages/login.vue'
-import Home from '../pages/home.vue'
+const Login = () => import('../pages/login.vue')
+const Home = () => import('../pages/home.vue')
 import { getUserInfo } from '../api/user.js'
 
 function isAuthed() {

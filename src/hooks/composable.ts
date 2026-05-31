@@ -70,10 +70,12 @@ export function useCollaborativeEditor(options: UseCollaborativeEditorOptions) {
     yDoc = new Y.Doc();
     // console.log("传递的参数分别是", "documentId", documentId, "token", token)
 
-
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    
+//
     // 创建 Hocuspocus Provider
     provider = new HocuspocusProvider({
-      url: `ws://localhost:3001/${documentId}?token=${token}`,  // 你的 WebSocket 地址
+      url: `${protocol}//${window.location.host}/collaboration/${documentId}?token=${token}`,  
       name: documentId,
       token: token,
       document: yDoc,
